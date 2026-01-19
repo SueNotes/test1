@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전국 대학 학과 검색 (Web Ver.)</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        /* 1. 기본 설정 및 변수 */
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-sub: #6b7280;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 2. 헤더 디자인 */
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 100%;
+            padding: 2rem 1rem;
+            text-align: center;
+            color: white;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        header p {
+            margin-top: 0.5rem;
+            opacity: 0.9;
+        }
+
+        /* 3. 검색 컨테이너 */
+        .search-container {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: var(--shadow);
+            width: 90%;
+            max-width: 800px;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        input,
+        select,
+        button {
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+
+        .input-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            min-width: 100px;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        /* 4. 결과 리스트 디자인 */
+        #result-area {
+            width: 90%;
+            max-width: 800px;
+            margin-top: 2rem;
+            margin-bottom: 3rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .school-card {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+            border-left: 5px solid var(--primary-color);
+            transition: transform 0.2s;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .school-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .school-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        .school-info {
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .tag {
+            display: inline-block;
+            background-color: #e0e7ff;
+            color: #4338ca;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--text-sub);
+            padding: 2rem;
+            font-size: 1.1rem;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>🎓 전국 대학 정보 검색</h1>
+        <p>Open API를 활용한 실시간, 공유 가능한 대학 검색 서비스</p>
+    </header>
+
+    <div class="search-container">
+        <select id="region-select" class="input-group">
+            <option value="">지역 선택 (전체)</option>
+            <option value="서울">서울</option>
+            <option value="부산">부산</option>
+            <option value="인천">인천</option>
+            <option value="대구">대구</option>
+            <option value="광주">광주</option>
+            <option value="대전">대전</option>
+            <option value="울산">울산</option>
+            <option value="세종">세종</option>
+            <option value="경기">경기</option>
+            <option value="강원">강원</option>
+            <option value="충북">충북</option>
+            <option value="충남">충남</option>
+            <option value="전북">전북</option>
+            <option value="전남">전남</option>
+            <option value="경북">경북</option>
+            <option value="경남">경남</option>
+            <option value="제주">제주</option>
+        </select>
+
+        <select id="type-select" class="input-group">
+            <option value="">학교 유형 (전체)</option>
+            <option value="대학교">대학교 (4년제)</option>
+            <option value="전문대학">전문대학 (2년제)</option>
+            <option value="대학원">대학원</option>
+        </select>
+
+        <input type="text" id="keyword-input" class="input-group" placeholder="대학명 또는 학과명 입력 (예: 컴퓨터)">
+
+        <button onclick="searchUniv()">검색하기</button>
+    </div>
+
+    <div id="result-area">
+        <!-- 결과가 여기에 표시됩니다 -->
+        <div class="loading">검색 조건을 입력하고 '검색하기'를 눌러주세요.</div>
+    </div>
+
+    <script>
+        // 전역 변수로 데이터를 담아둡니다.
+        let ALL_DATA = [];
+
+        // 페이지 로드 시 자동으로 데이터를 가져옵니다.
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadData();
+        });
+
+        async function loadData() {
+            const resultArea = document.getElementById('result-area');
+            try {
+                const response = await fetch('university_data.json');
+                if (!response.ok) throw new Error("데이터 파일을 찾을 수 없습니다.");
+
+                ALL_DATA = await response.json();
+                console.log(`데이터 로드 완료: ${ALL_DATA.length}건`);
+
+                document.querySelector('.loading').textContent = "데이터 준비 완료! 검색 조건을 입력하세요.";
+
+            } catch (error) {
+                console.error(error);
+                resultArea.innerHTML = `<div class="loading" style="color:red;">⚠ 데이터 로드 실패</div>`;
+            }
+        }
+
+        async function searchUniv() {
+            // 지역
+            const regionSelect = document.getElementById('region-select');
+            const regionText = regionSelect.options[regionSelect.selectedIndex].text;
+            const regionVal = regionSelect.value;
+
+            // 유형 (추가됨)
+            const typeVal = document.getElementById('type-select').value;
+
+            // 검색어
+            const keyword = document.getElementById('keyword-input').value.trim();
+            const resultArea = document.getElementById('result-area');
+
+            if (regionVal === "" && keyword.length < 2 && typeVal === "") {
+                alert("지역/유형을 선택하거나, 검색어를 2글자 이상 입력해주세요.");
+                return;
+            }
+
+            resultArea.innerHTML = '<div class="loading">🔍 검색 및 학교별 정리 중...</div>';
+
+            setTimeout(() => {
+                // 1. 1차 필터링
+                const filteredRows = ALL_DATA.filter(item => {
+                    // 지역 필터
+                    const regionMatch = (regionVal === "") || (item.region.includes(regionText));
+
+                    // 유형 필터 (추가됨: 데이터의 type이 '대학교', '전문대학' 등임)
+                    const typeMatch = (typeVal === "") || (item.type === typeVal);
+
+                    // 키워드 필터
+                    const keywordMatch = (keyword === "") ||
+                        (item.schoolName.includes(keyword)) ||
+                        (item.major.includes(keyword)) ||
+                        (item.job && item.job.includes(keyword));
+
+                    return regionMatch && typeMatch && keywordMatch;
+                });
+
+                // 2. 학교 기준으로 데이터 묶기 (Grouping)
+                // 학교명 -> { 지역, 학교유형, 링크, 학과목록[], 직업목록[] }
+                const schoolMap = new Map();
+
+                filteredRows.forEach(row => {
+                    if (!schoolMap.has(row.schoolName)) {
+                        schoolMap.set(row.schoolName, {
+                            schoolName: row.schoolName,
+                            region: row.region,
+                            type: row.type,
+                            link: row.link,
+                            majors: new Set(), // 중복 제거를 위해 Set 사용
+                            jobs: new Set()
+                        });
+                    }
+                    const school = schoolMap.get(row.schoolName);
+                    if (row.major) school.majors.add(row.major);
+                    if (row.job) school.jobs.add(row.job);
+                });
+
+                // Map을 배열로 변환
+                const groupedData = Array.from(schoolMap.values());
+
+                // 결과가 너무 많으면 상위 50개 학교만 보여주기
+                const limitData = groupedData.slice(0, 50);
+
+                displayResults(limitData, groupedData.length);
+            }, 50);
+        }
+
+        function displayResults(data, totalCount) {
+            const resultArea = document.getElementById('result-area');
+            resultArea.innerHTML = '';
+
+            if (data.length === 0) {
+                resultArea.innerHTML = '<div class="loading">검색 결과가 없습니다.</div>';
+                return;
+            }
+
+            const infoMsg = document.createElement('div');
+            infoMsg.style.textAlign = 'center';
+            infoMsg.style.color = '#666';
+            infoMsg.style.marginBottom = '1rem';
+            if (totalCount > 50) {
+                infoMsg.innerHTML = `총 <b>${totalCount}</b>개 대학이 검색되었습니다. (상위 50개만 표시)`;
+            } else {
+                infoMsg.innerHTML = `총 <b>${totalCount}</b>개 대학이 검색되었습니다.`;
+            }
+            resultArea.appendChild(infoMsg);
+
+            data.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'school-card';
+
+                // 학과 목록 정리 (최대 10개만 보여주고 ... 처리)
+                const majorList = Array.from(item.majors);
+                const displayMajors = majorList.slice(0, 10).join(", ");
+                const moreMajors = majorList.length > 10 ? ` 외 ${majorList.length - 10}개` : "";
+
+                // 관련 직업 정리 (검색어가 있을 때만 보여줄 수도 있지만, 여기선 일단 3개만)
+                const jobList = Array.from(item.jobs).filter(j => j).slice(0, 5).join(", "); // 빈 값 제외
+                const jobInfo = jobList ? `<div style="margin-top:4px; font-size:0.9rem; color:#555;">💼 관련 진로: ${jobList}...</div>` : '';
+
+                let linkUrl = item.link;
+                if (linkUrl && !linkUrl.startsWith('http')) {
+                    linkUrl = 'http://' + linkUrl;
+                }
+
+                card.innerHTML = `
+                    <div class="school-name">${item.schoolName} <span style="font-size:0.8rem; font-weight:400; color:#666;">(${item.type})</span></div>
+                    <div class="school-info">
+                        <span class="tag" style="background:#eee; color:#333;">${item.region}</span>
+                        <div style="margin-top:8px; line-height:1.6;">
+                            <b>🎓 개설 학과:</b> ${displayMajors}${moreMajors}
+                        </div>
+                        ${jobInfo}
+                        <div style="margin-top:8px;">
+                            🌐 <a href="${linkUrl}" target="_blank" style="color:#4f46e5; text-decoration:none;">학교 홈페이지 방문하기</a>
+                        </div>
+                    </div>
+                `;
+                resultArea.appendChild(card);
+            });
+        }
+    </script>
+</body>
+
+</html>
